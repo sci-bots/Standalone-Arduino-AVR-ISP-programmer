@@ -38,14 +38,14 @@ byte pageBuffer[128];		       /* One page of flash */
 #define RESET 10
 #define CLOCK 9     // self-generate 8mhz clock - handy!
 
-#define BUTTON A1
-#define PIEZOPIN A3
+#define BUTTON A0
+#define PIEZOPIN 6
 
 // Set to 1 to enable autostart. This automatically starts programming
 // when a chip is inserted. How this detection happens is determined by
 // the DETECT_* constants below. This is disabled by default, since the
 // default settings require adding a pulldown (see below).
-#define AUTOSTART 0
+#define AUTOSTART 1
 
 // Pin to use for detecting chip presence. This defaults to the
 // (target) RESET pin, which detects the (internal) reset pullup on the
@@ -126,6 +126,10 @@ bool detect_chip() {
 #endif
 
 void loop (void) {
+  // It seems like this pullup is being disabled somewhere in the code, so we need to re-enable
+  // it each time through the loop to prevent entering an endless loop
+  digitalWrite(BUTTON, HIGH); // pullup
+
   #if AUTOSTART != 0
   Serial.println("\nInsert next chip to autostart or type 'G' or hit BUTTON to force start");
   #else
@@ -138,8 +142,9 @@ void loop (void) {
       break;
     }
     #endif
-    if  ((! digitalRead(BUTTON)) || (Serial.read() == 'G'))
-      break;  
+    if  ((! digitalRead(BUTTON)) || (Serial.read() == 'G')) {
+      break;
+    }
   }
     
   target_poweron();			/* Turn on target power */
@@ -286,8 +291,3 @@ boolean target_poweroff ()
   digitalWrite(LED_PROGMODE, LOW);
   return true;
 }
-
-
-
-
-
